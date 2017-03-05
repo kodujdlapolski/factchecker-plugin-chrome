@@ -1,6 +1,8 @@
 import qs from 'qs';
-import md5 from 'crypto-js/md5';
+import sha256 from 'crypto-js/sha256';
 import diacriticsMap from './diacritics';
+
+const originParam = 'factcheck-user-came-from'
 
 export const removeDiacritics = (str) => {
   return str.replace(/[^\u0000-\u007E]/g, (a) => {
@@ -78,6 +80,25 @@ export const encodeParams = (params) => {
   return qs.stringify(params);
 };
 
+export const parseFCOrigin = (url) => {
+  const parser = document.createElement('a');
+  parser.href = url;
+
+  const params = qs.parse(parser.search);
+
+  return params[originParam];
+}
+
+function getJsonFromUrl() {
+  var query = location.search.substr(1);
+  var result = {};
+  query.split("&").forEach(function(part) {
+    var item = part.split("=");
+    result[item[0]] = decodeURIComponent(item[1]);
+  });
+  return result;
+}
+
 export const getShortUrl = (url) => {
   const parser = document.createElement('a');
   parser.href = url;
@@ -92,8 +113,8 @@ export const getShortUrl = (url) => {
   return purl;
 };
 
-export const getUrlCode = (url) => {
-  return md5(getShortUrl(url)).toString();
+export const hashUrl = (url) => {
+  return sha256(url).toString();
 };
 
 export const getFacebookUrl = (article) => {

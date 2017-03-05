@@ -29,7 +29,9 @@ The extension will automatically reload on code changes.
 
 If you would like to create a similar plugin for your factchecker these are the steps you have to follow:
  
+1. Update `src/manifest.json` with description of your factchecker
+    - aa
 1. Override `src/assets/icon*` with your own icons 
-   - `icon_gray` is shown in task bar when there are no factchecked statements on the current website
+    - `icon_gray` is shown in task bar when there are no factchecked statements on the current website
    
 

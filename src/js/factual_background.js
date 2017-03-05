@@ -6,24 +6,23 @@
  *
  * @author Alexandru Badiu <andu@ctrlz.ro>
  */
-import { getFacts, getAllFacts, getFactsFromCache, setFactsCache } from './api';
-import { getUserToken } from './util';
+import { getFacts, getAllFacts, getAllSources, getFactsFromCache, setFactsCache } from './api';
+import { getUserToken, slugify, getShortUrl, parseFCOrigin} from './util';
+import config from './config';
 
 require('../css/factual.scss');
 
 class FactualBackground {
   constructor() {
+
     console.info('[factchecker-plugin-chrome] Background init.');
 
     this.cachedFacts = [];
-    this.alarmName = 'factual-update-facts';
     this.settings = {
       enabled: true,
       uid: '',
     };
     this.tabIndicators = {};
-
-    // chrome.alarms.clear(this.alarmName);
 
     chrome.storage.sync.get('settings', (result) => {
       if (result && result.settings) {
@@ -42,11 +41,34 @@ class FactualBackground {
     chrome.storage.local.get('facts', (data) => {
       setFactsCache(data.facts);
     });
+
+    this.cachedSources = {};
+    chrome.storage.local.get('sources', (data) => {
+      this.cachedSources = data.sources;
+    });
   }
 
   updateCachedFacts(facts) {
     setFactsCache(facts);
     chrome.storage.local.set({ facts: this.cachedFacts });
+  }
+
+  updateCachedSources(sources_arr) {
+    // map array as object
+    const sources_obj = {};
+    // remember URLs served by API because they may be modified by standardization
+    sources_arr.forEach(url => sources_obj[getShortUrl(url)] = url);
+
+    this.cachedSources = sources_obj;
+    chrome.storage.local.set({ sources: this.cachedSources });
+  }
+
+  sourceCachingIsEnabled() {
+    return !!config.updateSourcesCachePeriodInMinutes;
+  }
+
+  getCachedSource(url) {
+    return this.cachedSources[getShortUrl(url)];
   }
 
   toolbarClicked() {
@@ -101,22 +123,38 @@ class FactualBackground {
     }
 
     if (request.action === 'facts-get') {
+      const origin = parseFCOrigin(request.url);
+
+      if (this.sourceCachingIsEnabled()) {
+        const source = this.getCachedSource(request.url);
+        if (!source) {
+          return false; // no statements on this url
+        }
+
+        getFacts(source, this.settings.uid, 'chrome_extension', origin)
+        .then((facts) => {
+          sendResponse(facts);
+        });
+
+        return true; // will respond asynchronously
+      }
+
       const cfacts = getFactsFromCache(request.url);
       if (cfacts.length) {
         sendResponse(cfacts);
 
         // We ping the API even if we had a cache hit for statistics purposes.
-        getFacts(request.url, this.settings.uid, 'chrome_extension', 'site');
+        getFacts(request.url, this.settings.uid, 'chrome_extension', origin);
 
         return false;
       }
 
-      getFacts(request.url, this.settings.uid, 'chrome_extension', 'site')
+      getFacts(request.url, this.settings.uid, 'chrome_extension', origin)
         .then((facts) => {
           sendResponse(facts);
         });
 
-      return true;
+      return true; // will respond asynchronously
     }
 
     return false;
@@ -145,10 +183,17 @@ class FactualBackground {
   }
 
   onAlarm(alarm) {
-    if (alarm.name === this.alarmName) {
+    if (alarm.name === config.pluginId + '-update-facts' && config.updateFullCachePeriodInMinutes) {
       getAllFacts(this.settings.uid, 'chrome_extension', 'site')
         .then((facts) => {
           this.updateCachedFacts(facts);
+        });
+    }
+
+    if (alarm.name === config.pluginId + '-update-sources' && config.updateSourcesCachePeriodInMinutes) {
+      getAllSources(this.settings.uid, 'chrome_extension', 'site')
+        .then((sources) => {
+          this.updateCachedSources(sources);
         });
     }
   }
@@ -190,11 +235,18 @@ class FactualBackground {
 
   setupAlarms() {
     chrome.alarms.getAll((alarms) => {
-      const hasAlarm = alarms.some(a => a.name === this.alarmName);
-      if (!hasAlarm) {
-        chrome.alarms.create(this.alarmName, {
+      if (!alarms.some(a => a.name === config.pluginId + '-update-facts')) {
+        // TODO updating if period has changed between plugin releases
+        chrome.alarms.create(config.pluginId + '-update-facts', {
           delayInMinutes: 1,
-          periodInMinutes: 60 * 24,
+          periodInMinutes: config.updateFullCachePeriodInMinutes,
+        });
+      }
+
+      if (!alarms.some(a => a.name === config.pluginId + '-update-sources')) {
+        chrome.alarms.create(config.pluginId + '-update-sources', {
+          delayInMinutes: 1,
+          periodInMinutes: config.updateSourcesCachePeriodInMinutes,
         });
       }
     });

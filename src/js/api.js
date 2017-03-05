@@ -1,41 +1,46 @@
 import Rx from 'rx';
 import config from './config';
-import { encodeParams, getUrlCode, getShortUrl } from './util';
-import { convertFact, convertFacts } from './fact';
+import { encodeParams, hashUrl, getShortUrl } from './util';
 
-let factsCache = [];
+// converting json api object to simple json object
+const convertStatement = (jao) => {
+  // assert jao['type'] = 'statements'
+  const ret = jao.attributes;
 
-export const setFactsCache = (facts) => {
-  factsCache = facts;
-};
+  ret['id'] = jao.id;
+  if (jao['links']['self']) {
+    ret['api_uri'] = jao['links']['self'];
+  }
 
-export const getFactsFromCache = (url) => {
-  return _.filter(factsCache, { source: getShortUrl(url) });
-};
+  return ret;
+}
 
 export const getFacts = (url, uid, client, origin) => {
   return new Promise((resolve) => {
-    const urlCode = getUrlCode(url);
+    const urlHash = hashUrl(url);
     const params = {
-      q: urlCode,
-      u: uid,
-      client,
-      origin,
+      uri: url, // todo hash
+      client
     };
 
-    console.info('[factchecker-plugin-chrome] Querying for facts.', `http:\/\/${config.api}?${encodeParams(params)}`);
+    if (origin) {
+      params['origin'] = origin;
+    }
+
+    const apiurl = `${config.api}/statements?${encodeParams(params)}`;
+    console.info('[factchecker-plugin-chrome] Querying for facts.', apiurl);
 
     $.ajax({
       dataType: 'json',
-      url: `http:\/\/${config.api}?${encodeParams(params)}`,
-    }).then((response) => {
+      url: apiurl,
+    }).then((response) => { // todo fail catching function( jqXHR, textStatus, errorThrown ) {
       const facts = [];
       if (response.error) {
         return resolve(facts);
       }
 
       if (response.data) {
-        Object.keys(response.data).forEach(id => facts.push(convertFact(response.data[id])));
+        Object.keys(response.data).forEach(id => facts.push(convertStatement(response.data[id])));
       }
 
       resolve(facts);
@@ -53,11 +58,12 @@ const getAllPage = (page, uid, client, origin) => {
   };
 
   return Rx.Observable.fromPromise(new Promise((resolve) => {
-    console.info('[factchecker-plugin-chrome] Caching facts.', `http:\/\/${config.api}?${encodeParams(params)}`);
+    const url = `${config.api}?${encodeParams(params)}`;
+    console.info('[factchecker-plugin-chrome] Caching facts.', url);
 
     $.ajax({
       dataType: 'json',
-      url: `http:\/\/${config.api}?${encodeParams(params)}`,
+      url: url,
     }).then((response) => {
       const result = {
         total_pages: 0,
@@ -113,5 +119,30 @@ export const getAllFacts = (uid, client, origin) => {
           resolve(facts);
         }
       );
+  });
+};
+
+export const getAllSources = (uid, client) => {
+  return new Promise((resolve) => {
+    const params = {
+      uid,
+      client,
+    };
+    const url = `${config.api}/sources_list?${encodeParams(params)}`;
+
+    console.info('[factchecker-plugin-chrome] Querying for sources.', url);
+
+    $.ajax({
+      dataType: 'json',
+      url: url,
+    }).then((response) => {
+      const sources = [];
+      if (response.error) {
+        // TODO is error logged anyhow?
+        return resolve(sources);
+      }
+
+      resolve(response.data.attributes.sources);
+    });
   });
 };
