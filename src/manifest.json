@@ -1,17 +1,17 @@
 {
   "name": "Factual",
   "description": "Prima extensie de fact-checking pe politicile și declarațiile publice din România.",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "icons": {
-    "16": "assets/factual_icon_16x16.png",
-    "32": "assets/factual_icon_32x32.png",
-    "48": "assets/factual_icon_48x48.png",
-    "128": "assets/factual_icon_128x128.png"
+    "16": "assets/icon_16x16.png",
+    "32": "assets/icon_32x32.png",
+    "48": "assets/icon_48x48.png",
+    "128": "assets/icon_128x128.png"
   },
   "browser_action": {
     "default_icon": {
-      "19": "assets/factual_icon_gray_19x19.png",
-      "38": "assets/factual_icon_gray_38x38.png"
+      "19": "assets/icon_gray_19x19.png",
+      "38": "assets/icon_gray_38x38.png"
     },
     "default_title": "Factual"
   },
@@ -49,16 +49,16 @@
   ],
   "manifest_version": 2,
   "web_accessible_resources": [
-    "assets/factual_icon.svg",
-    "assets/factual_logo.png",
-    "assets/factual_icon_16x16.png",
-    "assets/factual_icon_19x19.png",
-    "assets/factual_icon_gray_19x19.png",
-    "assets/factual_icon_32x32.png",
-    "assets/factual_icon_38x38.png",
-    "assets/factual_icon_gray_38x38.png",
-    "assets/factual_icon_48x48.png",
-    "assets/factual_icon_128x128.png",
+    "assets/icon.svg",
+    "assets/logo.png",
+    "assets/icon_16x16.png",
+    "assets/icon_19x19.png",
+    "assets/icon_gray_19x19.png",
+    "assets/icon_32x32.png",
+    "assets/icon_38x38.png",
+    "assets/icon_gray_38x38.png",
+    "assets/icon_48x48.png",
+    "assets/icon_128x128.png",
     "assets/check_true.png",
     "assets/check_false.png",
     "assets/check_neutral.png",

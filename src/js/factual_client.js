@@ -17,6 +17,7 @@ class Factual {
     this.factTemplate = _.template(require('../views/fact.html'));
     this.nfactTemplate = _.template(require('../views/unmatched-fact.html'));
     this.facebookFactTemplate = _.template(require('../views/facebook.html'));
+    this.logoUrl = getURL('assets/logo.png');
 
     this.facebookObserver = null;
     this.facebookFacts = [];
@@ -111,7 +112,7 @@ class Factual {
       status: article.fact.status,
       stext: article.fact.stext,
       url: article.fact.url,
-      logo: getURL('assets/factual_logo.png'),
+      logo: this.logoUrl,
       statusClass: article.fact.sclass,
     });
 
@@ -135,7 +136,7 @@ class Factual {
       status: fact.status,
       stext: fact.stext,
       url: fact.url,
-      logo: getURL('assets/factual_logo.png'),
+      logo: this.logoUrl,
       statusClass: fact.sclass,
     });
 
@@ -160,7 +161,7 @@ class Factual {
             status: fact.status,
             quote: fact.quote,
             url: `${fact.url}?client=chrome_extension`,
-            logo: getURL('assets/factual_logo.png'),
+            logo: this.logoUrl,
             statusClass: fact.sclass,
             date: fact.date,
           });

@@ -157,8 +157,8 @@ class FactualBackground {
     if (numFacts) {
       chrome.browserAction.setIcon({
         path : {
-          '19': 'assets/factual_icon_19x19.png',
-          '38': 'assets/factual_icon_38x38.png',
+          '19': 'assets/icon_19x19.png',
+          '38': 'assets/icon_38x38.png',
         }
       });
 
@@ -169,8 +169,8 @@ class FactualBackground {
 
     chrome.browserAction.setIcon({
       path : {
-        '19': 'assets/factual_icon_gray_19x19.png',
-        '38': 'assets/factual_icon_gray_38x38.png',
+        '19': 'assets/icon_gray_19x19.png',
+        '38': 'assets/icon_gray_38x38.png',
       }
     });
 
