@@ -23,7 +23,7 @@ class Factual {
     this.facebookFacts = [];
     this.facts = [];
     this.matched = 0;
-    this.unmatchedFact = null;
+    this.unmatchedFacts = [];
     this.settings = {
       enabled: true,
     };
@@ -46,7 +46,9 @@ class Factual {
           this.handleFacebook();
         } else {
           chrome.runtime.sendMessage({ action: 'facts-get', url: window.location.href }, (facts) => {
-            this.facts = facts;
+            this.facts = facts || [];
+            this.unmatchedFacts = [];
+
             this.displayFacts();
 
             chrome.runtime.sendMessage({ action: 'action-update', numFacts: this.facts.length });
@@ -126,12 +128,15 @@ class Factual {
       this.displayFact(fact);
     });
 
-    if (this.unmatchedFact) {
-      this.displayUnmatchedFact(this.unmatchedFact);
-    }
+    this.displayUnmatchedFacts(this.unmatchedFacts);
   }
 
-  displayUnmatchedFact(fact) {
+  displayUnmatchedFacts(facts) {
+    if (!facts.length) {
+      return;
+    }
+
+    let fact = facts[0]; // TODO there can be multiple facts https://github.com/TransparenCEE/factchecker-plugin-chrome/issues/38
     let content = this.nfactTemplate({
       status: fact.status,
       stext: fact.stext,
@@ -184,11 +189,11 @@ class Factual {
           $(`.${factClass}`).last().addClass('factchecker-fact-mark-icon');
         },
         noMatch: () => {
-          this.unmatchedFact = fact;
+          this.unmatchedFacts.push(fact);
         },
       });
     } else {
-      this.unmatchedFact = fact;
+      this.unmatchedFacts.push(fact);
     }
   }
 }
