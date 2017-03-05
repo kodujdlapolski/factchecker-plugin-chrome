@@ -6,7 +6,7 @@
  *
  * @author Alexandru Badiu <andu@ctrlz.ro>
  */
-import { getFacts, getAllFacts, getAllSources, getFactsFromCache, setFactsCache } from './api';
+import { getFacts, getAllFacts, getAllSources } from './api';
 import { getUserToken, slugify, getShortUrl, parseFCOrigin} from './util';
 import config from './config';
 
@@ -39,7 +39,7 @@ class FactualBackground {
     });
 
     chrome.storage.local.get('facts', (data) => {
-      setFactsCache(data.facts);
+      this.cachedFacts = data.facts;
     });
 
     this.cachedSources = {};
@@ -49,7 +49,7 @@ class FactualBackground {
   }
 
   updateCachedFacts(facts) {
-    setFactsCache(facts);
+    this.cachedFacts = facts;
     chrome.storage.local.set({ facts: this.cachedFacts });
   }
 
@@ -139,7 +139,7 @@ class FactualBackground {
         return true; // will respond asynchronously
       }
 
-      const cfacts = getFactsFromCache(request.url);
+      const cfacts = _.filter(this.cachedFacts, { source: getShortUrl(request.url) });
       if (cfacts.length) {
         sendResponse(cfacts);
 
