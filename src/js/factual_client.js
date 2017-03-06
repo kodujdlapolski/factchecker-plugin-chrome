@@ -10,7 +10,7 @@ import Rx from 'rx';
 import Mark from 'mark.js';
 import 'webui-popover';
 import MutationSummary from 'mutation-summary';
-import { getURL, getUrlCode, isFacebook, getFacebookUrl } from './util';
+import { getURL, hashUrl, isFacebook, getFacebookUrl } from './util';
 
 class Factual {
   constructor() {
@@ -138,6 +138,8 @@ class Factual {
 
     let fact = facts[0]; // TODO there can be multiple facts https://github.com/TransparenCEE/factchecker-plugin-chrome/issues/38
     let content = this.nfactTemplate({
+      fact: fact,
+      facts: facts,
       status: fact.status,
       stext: fact.stext,
       url: fact.url,
@@ -155,46 +157,44 @@ class Factual {
   }
 
   displayFact(fact) {
-    if (fact.quote) {
-      const factClass = `factchecker-${getUrlCode(fact.url)}`;
-      this.marker.mark(fact.quote, {
-        className: `${factClass} factchecker-fact-mark factchecker-fact-mark-${fact.sclass}`,
-        acrossElements: true,
-        separateWordSearch: false,
-        each: (factMark) => {
-          const content = this.factTemplate({
-            status: fact.status,
-            quote: fact.quote,
-            url: `${fact.url}?client=chrome_extension`,
-            logo: this.logoUrl,
-            statusClass: fact.sclass,
-            date: fact.date,
-          });
-
-          this.matched++;
-
-          $(factMark).webuiPopover({
-            width: 320,
-            arrow: false,
-            placement: 'bottom',
-            content,
-            onShow: (element) => {
-              $('.factchecker-fact-details__close a', element).on('click', () => {
-                $(factMark).webuiPopover('hide');
-              });
-            },
-          });
-        },
-        done: () => {
-          $(`.${factClass}`).last().addClass('factchecker-fact-mark-icon');
-        },
-        noMatch: () => {
-          this.unmatchedFacts.push(fact);
-        },
-      });
-    } else {
-      this.unmatchedFacts.push(fact);
+    if (!fact.text) {
+      return;
     }
+    const factClass = `factchecker-${fact.id}`;
+    this.marker.mark(fact.text, {
+      className: `${factClass} factchecker-fact-mark factchecker-fact-mark-${fact.rating}`,
+      acrossElements: true,
+      separateWordSearch: false,
+      each: (factMark) => {
+        const content = this.factTemplate({
+          fact: fact,
+          url: `${fact.url}?client=chrome_extension`,
+          logo: this.logoUrl,
+          statusClass: fact.sclass,
+          date: fact.date,
+        });
+
+        this.matched++;
+
+        $(factMark).webuiPopover({
+          width: 320,
+          arrow: false,
+          placement: 'bottom',
+          content,
+          onShow: (element) => {
+            $('.factchecker-fact-details__close a', element).on('click', () => {
+              $(factMark).webuiPopover('hide');
+            });
+          },
+        });
+      },
+      done: () => {
+        $(`.${factClass}`).last().addClass('factchecker-fact-mark-icon');
+      },
+      noMatch: () => {
+        this.unmatchedFacts.push(fact);
+      },
+    });
   }
 }
 

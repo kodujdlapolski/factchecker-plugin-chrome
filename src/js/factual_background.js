@@ -235,7 +235,7 @@ class FactualBackground {
 
   setupAlarms() {
     chrome.alarms.getAll((alarms) => {
-      if (!alarms.some(a => a.name === config.pluginId + '-update-facts')) {
+      if (!alarms.some(a => a.name === config.pluginId + '-update-facts') && config.updateFullCachePeriodInMinutes) {
         // TODO updating if period has changed between plugin releases
         chrome.alarms.create(config.pluginId + '-update-facts', {
           delayInMinutes: 1,
@@ -243,7 +243,7 @@ class FactualBackground {
         });
       }
 
-      if (!alarms.some(a => a.name === config.pluginId + '-update-sources')) {
+      if (!alarms.some(a => a.name === config.pluginId + '-update-sources') && config.updateSourcesCachePeriodInMinutes) {
         chrome.alarms.create(config.pluginId + '-update-sources', {
           delayInMinutes: 1,
           periodInMinutes: config.updateSourcesCachePeriodInMinutes,

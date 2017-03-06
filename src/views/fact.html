@@ -1,25 +1,25 @@
-<div class='factchecker-fact-details factchecker-fact-${statusClass}'>
+<div class='factchecker-fact-details factchecker-fact-${fact.rating}'>
   <div class='factchecker-fact-details__header'>
     <div class='factchecker-fact-details__date'>${ date }</div>
     <div class='factchecker-fact-details__close'>
       <a></a>
     </div>
     <div class='factchecker-fact-details__statusc'>
-      <div class='factchecker-fact-details__status'>${ status }</div>
+      <div class='factchecker-fact-details__status'>${ fact.rating_text }</div>
     </div>
   </div>
   <div class='factchecker-fact-details__body'>
-    <p>"${ quote }"</p>
+    <p>"${ fact.text }"</p>
   </div>
   <div class='factchecker-fact-details__footer'>
     <div class='factchecker-details--footer__logo'>
       <img src='${ logo }' alt='Factual' />
     </div>
     <div class='factchecker-details--footer__more'>
-      Afla mai multe pe <a href='${ url }' target='_blank'>factual.ro</a>.
-    </div>
-    <div class='factchecker-details--footer__share'>
-      <a href='https://www.facebook.com/sharer/sharer.php?u=${ url }' target='_blank'>Share</a>
-    </div>
+        Przeczytaj uzasadnienie na <a href='${ fact.factchecker_uri }' target='_blank'>Demagog.org.pl</a>.
+      </div>
+      <div class='factchecker-details--footer__share'>
+        <a href='https://www.facebook.com/sharer/sharer.php?u=${ fact.factchecker_uri }' target='_blank'>Udostepnij</a>
+      </div>
   </div>
 </div>

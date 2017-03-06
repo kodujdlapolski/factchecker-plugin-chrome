@@ -3,7 +3,7 @@
 @import 'facebook';
 
 .factchecker-fact-mark-true {
-  background-color: #ABE5DD !important;
+  background-color: #6aba43 !important;
 }
 
 .factchecker-fact-mark-ptrue {
@@ -11,15 +11,19 @@
 }
 
 .factchecker-fact-mark-false {
-  background-color: #FEC0C2 !important;
+  background-color: #e84f2b !important;
 }
 
 .factchecker-fact-mark-pfalse {
   background-color: #FED9D9 !important;
 }
 
-.factchecker-fact-mark-neutral {
-  background-color: #D4D4D4 !important;
+.factchecker-fact-mark-lie {
+  background-color: #febc1e !important;
+}
+
+.factchecker-fact-mark-unknown {
+  background-color: #229ee5 !important;
 }
 
 mark {
@@ -47,31 +51,11 @@ mark {
   }
 
   &.factchecker-fact-true {
-    border-top-color: #00A98E;
+    border-top-color: #6aba43;
 
     .factchecker-fact-details__status {
-      background-color: #00A98E;
+      background-color: #6aba43;
       background-image: url('chrome-extension://__MSG_@@extension_id__/assets/check_true.png');
-      background-repeat: no-repeat;
-    }
-  }
-
-  &.factchecker-fact-false {
-    border-top-color: #EA2F31;
-
-    .factchecker-fact-details__status {
-      background-color: #EA2F31;
-      background-image: url('chrome-extension://__MSG_@@extension_id__/assets/check_false.png');
-      background-repeat: no-repeat;
-    }
-  }
-
-  &.factchecker-fact-pfalse {
-    border-top-color: #F38181;
-
-    .factchecker-fact-details__status {
-      background-color: #F38181;
-      background-image: url('chrome-extension://__MSG_@@extension_id__/assets/check_false.png');
       background-repeat: no-repeat;
     }
   }
@@ -86,11 +70,32 @@ mark {
     }
   }
 
-  &.factchecker-fact-neutral {
-    border-top-color: #D4D4D4;
+  &.factchecker-fact-false {
+    border-top-color: #e84f2b;
 
     .factchecker-fact-details__status {
-      background-color: #D4D4D4;
+      background-color: #e84f2b;
+      background-image: url('chrome-extension://__MSG_@@extension_id__/assets/check_false.png');
+      background-repeat: no-repeat;
+    }
+  }
+
+  &.factchecker-fact-lie {
+    border-top-color: #febc1e;
+
+    .factchecker-fact-details__status {
+      background-color: #febc1e;
+      background-image: url('chrome-extension://__MSG_@@extension_id__/assets/check_false.png');
+      background-repeat: no-repeat;
+    }
+  }
+
+// TODO make it easier to implement
+  &.factchecker-fact-unknown {
+    border-top-color: #229ee5;
+
+    .factchecker-fact-details__status {
+      background-color: #229ee5;
       background-image: url('chrome-extension://__MSG_@@extension_id__/assets/check_neutral.png');
       background-repeat: no-repeat;
     }
@@ -199,6 +204,11 @@ mark {
       float: left;
       width: 60px;
       height: 44px;
+
+      img {
+        width: 60px;
+        height: 44px;
+      }
     }
 
     .factchecker-details--footer__more {
@@ -257,6 +267,16 @@ mark {
 
     .factchecker-fact-details__header {
       margin-bottom: -10px;
+    }
+
+    .factchecker-fact-details__body {
+      text-align: left;
+      padding-left: 17px;
+      padding-top: 0px;
+
+      p {
+        paddint-top: 10px;
+      }
     }
 
     .factchecker-fact-details__footer {
