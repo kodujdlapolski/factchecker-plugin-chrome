@@ -1,4 +1,7 @@
-# Factual Chrome extension
+# Chrome extension showing fact-checked statements
+
+## Deployment for Polish Demagog (a prototype)
+![demagog-multiple](https://cloud.githubusercontent.com/assets/849975/23593645/0b7c215a-0212-11e7-8b8b-6b3adc31e3d9.JPG)
 
 ## Releases
 For the latest packaged version check the [releases](https://github.com/TransparenCEE/factchecker-plugin-chrome/releases) page. Drop the `crx` file in the Chrome extensions page (`chrome://extensions/`).
