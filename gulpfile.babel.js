@@ -43,8 +43,8 @@ gulp.task('lint', () => {
 gulp.task('pre-build', (callback) => {
   runSequence(
     'clean',
-    'bump-manifest',
-    'bump-package',
+    //'bump-manifest',
+    //'bump-package',
     'lint',
     'static',
     'clean-manifest',
