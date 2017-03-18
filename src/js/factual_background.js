@@ -255,11 +255,35 @@ class FactualBackground {
   standardizeUrl(url) {
     // rules allow to define URL standardization for given domains or paths
     // mostly it's used to strip unneccesary query fields
-    var rules = [{
+
+    var rules = [{ // https://www.youtube.com/watch?v=fkMW9rBXn7o&amp;ab_channel=CEPERolkV4
       'if': ['youtube.com/watch', 'www.youtube.com/watch'],
       'then': {
-        'save_query_fields': ['v']
+        'save_query_fields': ['v', 't']
        }
+    }, { // http://www.sejm.gov.pl/sejm8.nsf/transmisje.xsp?unid=C2AE0CE00D2C0A00C1257F940065355A#
+    // http://www.sejm.gov.pl/Sejm7.nsf/komunikat.xsp?documentId=16C4F72CC6BB07F0C1257CC4002B708C
+    // http://www.sejm.gov.pl/Sejm7.nsf/agent.xsp?symbol=glosowania&NrKadencji=7&NrPosiedzenia=66&NrGlosowania=43
+      'if': ['sejm.gov.pl', 'www.sejm.gov.pl'],
+      'then': {
+        'save_query_fields': ['unid', 'documentId', 'symbol', 'NrKadencji', 'NrPosiedzenia', 'NrGlosowania']
+      }
+    }, { // http://wpolityce.pl/polityka/276980-minister-dziedziczak-to-niezrozumiale-ze-w-sprawie-statusu-polakow-w-niemczech-do-dzis-aktualne-sa-decyzje-z-czasow-iii-rzeszy-chcemy-partnerskich-relacji-nasz-wywiad?strona=3
+      // TODO How to tackle multipages? https://github.com/kodujdlapolski/factchecker-plugin-chrome/issues/17
+      'if': ['wpolityce.pl'],
+      'then': {
+        'save_query_fields': ['strona']
+      }
+    }, { // http://www.tokfm.pl/Tokfm/1,145400,18754260,likwidowac-gimnazja-wspolne-rozliczanie-sie-malzonkow-kto.html?as=2
+      'if': ['tokfm.pl', 'www.tokfm.pl'],
+      'then': {
+        'save_query_fields': ['as']
+      }
+    }, { // http://eur-lex.europa.eu/legal-content/PL/TXT/?uri=CELEX:12012M/TXT
+      'if': ['eur-lex.europa.eu'],
+      'then': {
+        'save_query_fields': ['uri']
+      }
     }];
 
     return utilsStandardizeUrl(url, rules);
