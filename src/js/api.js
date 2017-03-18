@@ -1,6 +1,6 @@
 import Rx from 'rx';
 import config from './config';
-import { encodeParams, hashUrl, getShortUrl } from './util';
+import { encodeParams, hashUrl } from './util';
 
 // converting json api object to simple json object
 const convertStatement = (jao) => {

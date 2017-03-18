@@ -99,18 +99,79 @@ function getJsonFromUrl() {
   return result;
 }
 
-export const getShortUrl = (url) => {
-  const parser = document.createElement('a');
-  parser.href = url;
+// rules allow to define URL standardization for given domains or paths
+// mostly it's used to strip unneccesary query fields
+export const standardizeUrl = (fullurl, rules) => {
+  const url = document.createElement('a');
+  url.href = fullurl;
 
-  let purl = `${parser.host}${parser.pathname}`;
-  purl = purl.replace(/^(www\.)/, '');
+  /* rules example
+  var rules = [{
+    'if': ['youtube.com/watch', 'www.youtube.com/watch'],
+    'then': {
+      'save_query_fields': ['v']
+     }
+  }];
+  */
 
-  if (purl[purl.length - 1] === '/') {
-    purl = purl.substr(0, purl.length - 1);
+  // choose rules
+  var actions = {};
+  rules.forEach(r => {
+    if (!Array.isArray(r.if)) r.if = [r.if];
+
+    if(r.if.some(domainOrPath => {
+      const condition = document.createElement('a');
+      condition.href = 'http://' + domainOrPath;
+
+      // condition can specify path for exact match, ie. youtube.com/watch
+      return (url.host == condition.host) &&
+        !(condition.pathname != '/' && url.pathname != condition.pathname);
+    })) {
+      for (const action in r.then) {
+        if (action in actions && Array.isArray(actions[action])) {
+          // aggregate array values
+          actions[action] = actions[action].concat(r.then[action]);
+
+        } else {
+          actions[action] = r.then[action];
+        }
+      }
+    };
+  });
+
+  // strip final slash
+  if (url.pathname[url.pathname.length - 1] === '/') {
+    url.pathname = url.pathname.substr(0, url.pathname.length - 1);
   }
 
-  return purl;
+  // strip www subdomain unless explicitly said not to do it
+  if (!actions['save_www']) {
+    url.host = url.host.replace(/^www\./, '');
+  }
+
+  var standardized = url.host + url.pathname;
+
+  if (actions['save_query_fields'] && url.search) {
+    var saved = {};
+    var foundAny = false;
+
+    const fields = qs.parse(url.search.substr(1));
+    actions['save_query_fields'].forEach(fld => {
+      if (fields.hasOwnProperty(fld)) {
+        saved[fld] = fields[fld];
+        foundAny = true;
+      }
+    });
+
+    if (foundAny)
+      standardized += '?' + qs.stringify(saved);
+  }
+
+  if (actions['save_hash']) {
+    standardized += url.hash;
+  }
+
+  return standardized;
 };
 
 export const hashUrl = (url) => {

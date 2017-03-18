@@ -7,7 +7,7 @@
  * @author Alexandru Badiu <andu@ctrlz.ro>
  */
 import { getFacts, getAllFacts, getAllSources } from './api';
-import { getUserToken, slugify, getShortUrl, parseFCOrigin} from './util';
+import { getUserToken, slugify, standardizeUrl as utilsStandardizeUrl, parseFCOrigin} from './util';
 import config from './config';
 
 require('../css/factual.scss');
@@ -57,7 +57,7 @@ class FactualBackground {
     // map array as object
     const sources_obj = {};
     // remember URLs served by API because they may be modified by standardization
-    sources_arr.forEach(url => sources_obj[getShortUrl(url)] = url);
+    sources_arr.forEach(url => sources_obj[this.standardizeUrl(url)] = url);
 
     this.cachedSources = sources_obj;
     chrome.storage.local.set({ sources: this.cachedSources });
@@ -68,7 +68,7 @@ class FactualBackground {
   }
 
   getCachedSource(url) {
-    return this.cachedSources[getShortUrl(url)];
+    return this.cachedSources[this.standardizeUrl(url)];
   }
 
   toolbarClicked() {
@@ -139,7 +139,7 @@ class FactualBackground {
         return true; // will respond asynchronously
       }
 
-      const cfacts = _.filter(this.cachedFacts, { source: getShortUrl(request.url) });
+      const cfacts = _.filter(this.cachedFacts, { source: this.standardizeUrl(request.url) });
       if (cfacts.length) {
         sendResponse(cfacts);
 
@@ -250,6 +250,19 @@ class FactualBackground {
         });
       }
     });
+  }
+
+  standardizeUrl(url) {
+    // rules allow to define URL standardization for given domains or paths
+    // mostly it's used to strip unneccesary query fields
+    var rules = [{
+      'if': ['youtube.com/watch', 'www.youtube.com/watch'],
+      'then': {
+        'save_query_fields': ['v']
+       }
+    }];
+
+    return utilsStandardizeUrl(url, rules);
   }
 }
 
