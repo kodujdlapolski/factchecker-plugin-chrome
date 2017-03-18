@@ -1,7 +1,7 @@
 {
-  "name": "Factual",
-  "description": "Prima extensie de fact-checking pe politicile și declarațiile publice din România.",
-  "version": "1.0.5",
+  "name": "Demagog",
+  "description": "Sprawdź jak politycy budują argumenty i starają się przekonywać do swoich racji. Podczas przeglądania mediów internetowych rozszerzenie dostarczy Ci kontekstowych informacji o prawdziwości wypowiedzi uczestników polskiej debataty publicznej.",
+  "version": "1.0.18",
   "icons": {
     "16": "assets/icon_16x16.png",
     "32": "assets/icon_32x32.png",
@@ -13,7 +13,7 @@
       "19": "assets/icon_gray_19x19.png",
       "38": "assets/icon_gray_38x38.png"
     },
-    "default_title": "Factual"
+    "default_title": "Demagog"
   },
   "permissions": [
     "storage",

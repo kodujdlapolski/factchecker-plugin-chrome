@@ -1,7 +1,7 @@
 {
   "name": "factchecker-plugin-chrome",
   "version": "1.0.3",
-  "description": "Factual Chrome extension.",
+  "description": "Chrome extension highlighting fact-checked statements.",
   "main": "index.js",
   "scripts": {
     "eslint": "eslint src",

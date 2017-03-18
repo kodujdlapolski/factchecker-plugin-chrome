@@ -19,6 +19,8 @@ For the latest packaged version check the [releases](https://github.com/Transpar
 
 The extension will automatically reload on code changes.
 
+For the extension to work you will need to have a running compatible API: https://github.com/TransparenCEE/factchecked-api-wpplugin
+
 ## Updating code
 
 * ```git pull origin branch_name```
@@ -32,8 +34,8 @@ The extension will automatically reload on code changes.
 
 If you would like to create a similar plugin for your factchecker these are the steps you have to follow:
  
-1. Update `src/manifest.json` with description of your factchecker
-1. Update `src/js/onfig.js` configuration
+1. Update `src/manifest.json` and `package.json` with description of your factchecker
+1. Define `src/js/config.js` configuration using `src/js/config.js.template`
 1. Override `src/assets/icon*` with your own icons 
     - `icon_gray` is shown in task bar when there are no factchecked statements on the current website
 1. Modify `src/views/*` templates according to your needs
