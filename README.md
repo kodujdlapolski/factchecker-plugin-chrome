@@ -1,5 +1,7 @@
 # Chrome extension showing fact-checked statements
 
+See highlighted fact-checked statements while reading online articles or browsing Facebook / Google.
+
 ## Deployment for Polish Demagog (a prototype)
 ![demagog-multiple](https://cloud.githubusercontent.com/assets/849975/23593645/0b7c215a-0212-11e7-8b8b-6b3adc31e3d9.JPG)
 
