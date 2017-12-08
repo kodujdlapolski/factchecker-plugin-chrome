@@ -12,9 +12,59 @@ import config from './config';
 
 require('../css/factual.scss');
 
+class TabInfo {
+  constructor(tabId) {
+    this.tabId = tabId;
+    this.numberOfFacts = 0;
+    this.status = 'loading';
+
+    this.updateBrowserAction();
+  }
+
+  setNumberOfFacts(value) {
+    this.numberOfFacts = value;
+    this.updateBrowserAction();
+  }
+
+  setLoading() {
+    this.status = 'loading';
+  }
+
+  isContentLoaded() {
+    return this.status === 'content-loaded';
+  }
+
+  setContentLoaded() {
+    this.status = 'content-loaded';
+  }
+
+  updateBrowserAction() {
+    if (this.numberOfFacts) {
+      chrome.browserAction.setIcon({
+        path : {
+          '19': 'assets/icon_19x19.png',
+          '38': 'assets/icon_38x38.png',
+        }
+      });
+
+      chrome.browserAction.setBadgeText({ text: `${this.numberOfFacts}` });
+
+      return;
+    }
+
+    chrome.browserAction.setIcon({
+      path : {
+        '19': 'assets/icon_gray_19x19.png',
+        '38': 'assets/icon_gray_38x38.png',
+      }
+    });
+
+    chrome.browserAction.setBadgeText({ text: '' });
+  }
+}
+
 class FactualBackground {
   constructor() {
-
     console.info('[factchecker-plugin-chrome] Background init.');
 
     this.cachedFacts = [];
@@ -22,7 +72,7 @@ class FactualBackground {
       enabled: true,
       uid: '',
     };
-    this.tabIndicators = {};
+    this.tabsInfo = {};
 
     chrome.storage.sync.get('settings', (result) => {
       if (result && result.settings) {
@@ -46,6 +96,16 @@ class FactualBackground {
     chrome.storage.local.get('sources', (data) => {
       this.cachedSources = data.sources;
     });
+  }
+
+  getTabInfo(tabId) {
+    if (this.tabsInfo[tabId]) {
+      return this.tabsInfo[tabId];
+    }
+
+    const newInfo = new TabInfo(tabId);
+    this.tabsInfo[tabId] = newInfo;
+    return newInfo;
   }
 
   updateCachedFacts(facts) {
@@ -112,8 +172,8 @@ class FactualBackground {
 
   onMessage(request, sender, sendResponse) {
     if (request.action === 'action-update') {
-      this.updateBrowserAction(sender.tab.id, request.numFacts);
-      
+      this.tabsInfo[sender.tab.id].setNumberOfFacts(request.numFacts);
+
       return false;
     }
 
@@ -160,26 +220,39 @@ class FactualBackground {
     return false;
   }
 
-  onUpdated(tabId, info) {
-    if (info.status === 'complete') {
-      chrome.tabs.sendMessage(tabId, {
-        action: 'content-loaded',
-      });
-    }
-  }
+  onUpdated(tabId, changeInfo, tabData) {
+    console.log('info', 'onUpdated', tabId, changeInfo, tabData);
+    const tabInfo = this.getTabInfo(tabId);
 
-  onActivated(activeInfo) {
-    if (this.tabIndicators[activeInfo.tabId]) {
-      this.updateBrowserAction(activeInfo.tabId, this.tabIndicators[activeInfo.tabId]);
-
+    if (changeInfo.status === 'loading') {
+      tabInfo.setLoading();
       return;
     }
 
-    this.updateBrowserAction(activeInfo.tabId, 0);
+    if (changeInfo.status !== 'complete') {
+      return;
+    }
+
+    if (tabInfo.isContentLoaded()) {
+      console.log('Content already loaded');
+      return;
+    }
+
+    tabInfo.setContentLoaded();
+
+    chrome.tabs.sendMessage(tabId, {
+      action: 'content-loaded',
+    });
   }
 
-  onRemoved(tabId, removeInfo) {
-    delete this.tabIndicators[tabId];
+  onActivated(activeInfo) {
+    console.log('onActivated', activeInfo);
+    this.getTabInfo(activeInfo.tabId).updateBrowserAction();
+  }
+
+  onRemoved(tabId) {
+    console.log('onActivated', tabId);
+    delete this.tabsInfo[tabId];
   }
 
   onAlarm(alarm) {
@@ -198,36 +271,11 @@ class FactualBackground {
     }
   }
 
-  updateBrowserAction(tabId, numFacts) {
-    if (numFacts) {
-      chrome.browserAction.setIcon({
-        path : {
-          '19': 'assets/icon_19x19.png',
-          '38': 'assets/icon_38x38.png',
-        }
-      });
-
-      chrome.browserAction.setBadgeText({ text: `${numFacts}` });
-      this.tabIndicators[tabId] = numFacts;
-      return;
-    }
-
-    chrome.browserAction.setIcon({
-      path : {
-        '19': 'assets/icon_gray_19x19.png',
-        '38': 'assets/icon_gray_38x38.png',
-      }
-    });
-
-    chrome.browserAction.setBadgeText({ text: '' });
-    delete this.tabIndicators[tabId];
-  }
-
   setupEvents() {
     chrome.storage.onChanged.addListener((changes, namespace) => this.settingsChanged(changes, namespace));
     chrome.browserAction.onClicked.addListener(() => this.toolbarClicked());
     chrome.tabs.onActivated.addListener((activeInfo) => this.onActivated(activeInfo));
-    chrome.tabs.onUpdated.addListener((tabId, info) => this.onUpdated(tabId, info));
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tabData) => this.onUpdated(tabId, changeInfo, tabData));
     chrome.tabs.onRemoved.addListener((tabId, removeInfo) => this.onRemoved(tabId, removeInfo));
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => this.onMessage(request, sender, sendResponse));
     chrome.alarms.onAlarm.addListener(alarm => this.onAlarm(alarm));
