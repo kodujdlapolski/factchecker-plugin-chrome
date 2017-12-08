@@ -163,6 +163,7 @@ class Factual {
     const factClass = `factchecker-${fact.id}`;
     this.marker.mark(fact.text, {
       className: `${factClass} factchecker-fact-mark factchecker-fact-mark-${fact.rating}`,
+      exclude: ['.factchecker-fact-mark'],
       acrossElements: true,
       separateWordSearch: false,
       each: (factMark) => {
