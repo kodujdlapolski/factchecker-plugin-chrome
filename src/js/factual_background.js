@@ -17,6 +17,7 @@ class TabInfo {
     this.tabId = tabId;
     this.numberOfFacts = 0;
     this.status = 'loading';
+    this.contentLoaded = false;
 
     this.updateBrowserAction();
   }
@@ -31,11 +32,11 @@ class TabInfo {
   }
 
   isContentLoaded() {
-    return this.status === 'content-loaded';
+    return this.contentLoaded;
   }
 
-  setContentLoaded() {
-    this.status = 'content-loaded';
+  setContentLoaded(contentLoaded = true) {
+    this.contentLoaded = contentLoaded;
   }
 
   updateBrowserAction() {
@@ -234,6 +235,8 @@ class FactualBackground {
     }
 
     if (tabInfo.isContentLoaded()) {
+      // TODO to check: this might stop checking content on newly loaded Facebook posts
+      // PS. this check is not neccessary
       console.log('Content already loaded');
       return;
     }
@@ -251,7 +254,7 @@ class FactualBackground {
   }
 
   onRemoved(tabId) {
-    console.log('onActivated', tabId);
+    console.log('onRemoved', tabId);
     delete this.tabsInfo[tabId];
   }
 
