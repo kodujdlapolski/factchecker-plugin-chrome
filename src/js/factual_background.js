@@ -7,7 +7,7 @@
  * @author Alexandru Badiu <andu@ctrlz.ro>
  */
 import { getFacts, getAllFacts, getAllSources } from './api';
-import { getUserToken, slugify, standardizeUrl as utilsStandardizeUrl, parseFCOrigin} from './util';
+import { getUserToken, slugify, standardizeUrl as utilsStandardizeUrl, parseFCOrigin, parseUrl} from './util';
 import config from './config';
 
 require('../css/factual.scss');
@@ -16,8 +16,9 @@ class TabInfo {
   constructor(tabId) {
     this.tabId = tabId;
     this.numberOfFacts = 0;
-    this.status = 'loading';
     this.contentLoaded = false;
+    this.currentUrl = null;
+    this.previousUrl = null;
 
     this.updateBrowserAction();
   }
@@ -27,8 +28,17 @@ class TabInfo {
     this.updateBrowserAction();
   }
 
-  setLoading() {
-    this.status = 'loading';
+  setLoading(url) {
+    this.previousUrl = this.currentUrl;
+    this.currentUrl = url;
+  }
+
+  getCurrentUrl() {
+    return this.currentUrl;
+  }
+
+  getPreviousUrl() {
+    return this.previousUrl;
   }
 
   isContentLoaded() {
@@ -222,11 +232,12 @@ class FactualBackground {
   }
 
   onUpdated(tabId, changeInfo, tabData) {
+    var tabInfo = this.getTabInfo(tabId);
     console.log('info', 'onUpdated', tabId, changeInfo, tabData);
-    const tabInfo = this.getTabInfo(tabId);
 
-    if (changeInfo.status === 'loading') {
-      tabInfo.setLoading();
+    if (changeInfo.status === 'loading' && changeInfo.url) {
+      // save loaded URL
+      tabInfo.setLoading(changeInfo.url);
       return;
     }
 
@@ -238,6 +249,27 @@ class FactualBackground {
       // TODO to check: this might stop checking content on newly loaded Facebook posts
       // PS. this check is not neccessary
       console.log('Content already loaded');
+
+      if (tabInfo.getCurrentUrl() !== tabInfo.getPreviousUrl()
+        && tabInfo.getCurrentUrl() && tabInfo.getPreviousUrl()) {
+
+        // URL changed, potential dynamic page reload, such as on YouTube
+        console.debug(`URL changed from ${tabInfo.getPreviousUrl()} to ${tabInfo.getCurrentUrl()}. Dynamic page reload?`);
+
+        var parsedCurrent = parseUrl(tabInfo.getCurrentUrl());
+        var parsedPrevious = parseUrl(tabInfo.getPreviousUrl());
+        parsedCurrent.hash = '';
+        parsedPrevious.hash = '';
+
+        if (parsedCurrent.href === parsedPrevious.href) {
+          // only hash changed
+        } else {
+          chrome.tabs.sendMessage(tabId, {
+            action: 'page-reloaded',
+          });
+        }
+      }
+
       return;
     }
 
