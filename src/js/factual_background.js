@@ -28,25 +28,31 @@ class TabInfo {
     this.updateBrowserAction();
   }
 
-  setLoading(url) {
+  updateUrl(url) {
     this.previousUrl = this.currentUrl;
     this.currentUrl = url;
   }
 
-  getCurrentUrl() {
-    return this.currentUrl;
-  }
+  wasDynamicPageReload() {
+    if (this.currentUrl !== this.previousUrl && this.currentUrl && this.previousUrl) {
+      // URL changed, potential dynamic page reload, such as on YouTube
+      console.debug(`URL changed from ${this.previousUrl} to ${this.currentUrl}. Dynamic page reload?`);
+      const parsedCurrent = parseUrl(this.currentUrl);
+      const parsedPrevious = parseUrl(this.previousUrl);
 
-  getPreviousUrl() {
-    return this.previousUrl;
-  }
+      // ignore hash only in some cases; most single-page-app (SPA) technology uses hash reloading
+      // when navigating between pages: hash change may mean content change
+      const ignoreHashInDomains = ['www.youtube.com', 'youtube.com'];
 
-  isContentLoaded() {
-    return this.contentLoaded;
-  }
+      if (ignoreHashInDomains.indexOf(parsedCurrent.hostname) !== -1) {
+        parsedCurrent.hash = '';
+        parsedPrevious.hash = '';
+        return parsedCurrent.href !== parsedPrevious.href;
+      }
+      return true;
+    }
 
-  setContentLoaded(contentLoaded = true) {
-    this.contentLoaded = contentLoaded;
+    return false;
   }
 
   updateBrowserAction() {
@@ -237,7 +243,7 @@ class FactualBackground {
 
     if (changeInfo.status === 'loading' && changeInfo.url) {
       // save loaded URL
-      tabInfo.setLoading(changeInfo.url);
+      tabInfo.updateUrl(changeInfo.url);
       return;
     }
 
@@ -245,36 +251,21 @@ class FactualBackground {
       return;
     }
 
-    if (tabInfo.isContentLoaded()) {
+    if (tabInfo.contentLoaded) {
       // TODO to check: this might stop checking content on newly loaded Facebook posts
       // PS. this check is not neccessary
       console.log('Content already loaded');
 
-      if (tabInfo.getCurrentUrl() !== tabInfo.getPreviousUrl()
-        && tabInfo.getCurrentUrl() && tabInfo.getPreviousUrl()) {
-
-        // URL changed, potential dynamic page reload, such as on YouTube
-        console.debug(`URL changed from ${tabInfo.getPreviousUrl()} to ${tabInfo.getCurrentUrl()}. Dynamic page reload?`);
-
-        var parsedCurrent = parseUrl(tabInfo.getCurrentUrl());
-        var parsedPrevious = parseUrl(tabInfo.getPreviousUrl());
-        parsedCurrent.hash = '';
-        parsedPrevious.hash = '';
-
-        if (parsedCurrent.href === parsedPrevious.href) {
-          // only hash changed
-        } else {
+      if (tabInfo.wasDynamicPageReload()) {
           chrome.tabs.sendMessage(tabId, {
             action: 'page-reloaded',
           });
-        }
       }
 
       return;
     }
 
-    tabInfo.setContentLoaded();
-
+    tabInfo.contentLoaded = true;
     chrome.tabs.sendMessage(tabId, {
       action: 'content-loaded',
     });
