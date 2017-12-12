@@ -80,6 +80,14 @@ export const encodeParams = (params) => {
   return qs.stringify(params);
 };
 
+export const parseUrl = (url) => {
+  const parser = document.createElement('a');
+  parser.href = url;
+
+  parser.searchparams = qs.parse(parser.search);
+  return parser;
+}
+
 export const parseFCOrigin = (url) => {
   const parser = document.createElement('a');
   parser.href = url;

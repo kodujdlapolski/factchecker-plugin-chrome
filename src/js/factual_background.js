@@ -7,7 +7,7 @@
  * @author Alexandru Badiu <andu@ctrlz.ro>
  */
 import { getFacts, getAllFacts, getAllSources } from './api';
-import { getUserToken, slugify, standardizeUrl as utilsStandardizeUrl, parseFCOrigin} from './util';
+import { getUserToken, slugify, standardizeUrl as utilsStandardizeUrl, parseFCOrigin, parseUrl} from './util';
 import config from './config';
 
 require('../css/factual.scss');
@@ -16,7 +16,9 @@ class TabInfo {
   constructor(tabId) {
     this.tabId = tabId;
     this.numberOfFacts = 0;
-    this.status = 'loading';
+    this.contentLoaded = false;
+    this.currentUrl = null;
+    this.previousUrl = null;
 
     this.updateBrowserAction();
   }
@@ -26,16 +28,31 @@ class TabInfo {
     this.updateBrowserAction();
   }
 
-  setLoading() {
-    this.status = 'loading';
+  updateUrl(url) {
+    this.previousUrl = this.currentUrl;
+    this.currentUrl = url;
   }
 
-  isContentLoaded() {
-    return this.status === 'content-loaded';
-  }
+  wasDynamicPageReload() {
+    if (this.currentUrl !== this.previousUrl && this.currentUrl && this.previousUrl) {
+      // URL changed, potential dynamic page reload, such as on YouTube
+      console.debug(`URL changed from ${this.previousUrl} to ${this.currentUrl}. Dynamic page reload?`);
+      const parsedCurrent = parseUrl(this.currentUrl);
+      const parsedPrevious = parseUrl(this.previousUrl);
 
-  setContentLoaded() {
-    this.status = 'content-loaded';
+      // ignore hash only in some cases; most single-page-app (SPA) technology uses hash reloading
+      // when navigating between pages: hash change may mean content change
+      const ignoreHashInDomains = ['www.youtube.com', 'youtube.com'];
+
+      if (ignoreHashInDomains.indexOf(parsedCurrent.hostname) !== -1) {
+        parsedCurrent.hash = '';
+        parsedPrevious.hash = '';
+        return parsedCurrent.href !== parsedPrevious.href;
+      }
+      return true;
+    }
+
+    return false;
   }
 
   updateBrowserAction() {
@@ -221,11 +238,12 @@ class FactualBackground {
   }
 
   onUpdated(tabId, changeInfo, tabData) {
+    var tabInfo = this.getTabInfo(tabId);
     console.log('info', 'onUpdated', tabId, changeInfo, tabData);
-    const tabInfo = this.getTabInfo(tabId);
 
-    if (changeInfo.status === 'loading') {
-      tabInfo.setLoading();
+    if (changeInfo.status === 'loading' && changeInfo.url) {
+      // save loaded URL
+      tabInfo.updateUrl(changeInfo.url);
       return;
     }
 
@@ -233,13 +251,21 @@ class FactualBackground {
       return;
     }
 
-    if (tabInfo.isContentLoaded()) {
+    if (tabInfo.contentLoaded) {
+      // TODO to check: this might stop checking content on newly loaded Facebook posts
+      // PS. this check is not neccessary
       console.log('Content already loaded');
+
+      if (tabInfo.wasDynamicPageReload()) {
+          chrome.tabs.sendMessage(tabId, {
+            action: 'page-reloaded',
+          });
+      }
+
       return;
     }
 
-    tabInfo.setContentLoaded();
-
+    tabInfo.contentLoaded = true;
     chrome.tabs.sendMessage(tabId, {
       action: 'content-loaded',
     });
@@ -251,7 +277,7 @@ class FactualBackground {
   }
 
   onRemoved(tabId) {
-    console.log('onActivated', tabId);
+    console.log('onRemoved', tabId);
     delete this.tabsInfo[tabId];
   }
 

@@ -41,10 +41,15 @@ class Factual {
         this.settings = request.msg;
       }
 
-      if (request.action === 'content-loaded') {
+      if (request.action === 'content-loaded' || request.action === 'page-reloaded') {
         if (isFacebook()) {
           this.handleFacebook();
         } else {
+          if (request.action === 'page-reloaded') {
+            // TODO clear banners here while implementing #29
+            $('.factchecker-fact-details-container').remove();
+          }
+
           chrome.runtime.sendMessage({ action: 'facts-get', url: window.location.href }, (facts) => {
             this.facts = facts || [];
             this.unmatchedFacts = [];
